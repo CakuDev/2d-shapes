@@ -6,18 +6,20 @@
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.h"
 
-struct Circle
+struct Shape
 {
-    std::string name = "Circle";
+    std::string name = "Shape";
     float scale = 1.0f;
     float velocity[2] = { 1.0f, 1.0f };
     float position[2] = { 200.0f, 200.0f };
     float color[3] = { 1.0f, 0.0f, 0.0f };
-    int radius = 100;
+    int width = 100;
+    int height = 100;
     bool is_drawn = true;
+    enum : char { CIRCLE } type = CIRCLE;
 };
 
-Color convertColor(float color[3])
+Color convertColor(const float color[3])
 {
     return Color
     { 
@@ -28,33 +30,44 @@ Color convertColor(float color[3])
     };
 }
 
-void moveCircle(Circle& circle, int screenWidth, int screenHeight) {
-    circle.position[0] += circle.velocity[0];
-    circle.position[1] += circle.velocity[1];
+void moveShape(Shape& shape, int screenWidth, int screenHeight) {
+    shape.position[0] += shape.velocity[0];
+    shape.position[1] += shape.velocity[1];
     
     // SCREEN BORDER CHECKS
     // Horizontal check
-    if (circle.position[0] - circle.radius * circle.scale <= 0)
+    if (shape.position[0] - shape.width * shape.scale <= 0)
     {
-        circle.velocity[0] = -circle.velocity[0];
-        circle.position[0] = 0 + circle.radius * circle.scale;
+        shape.velocity[0] = -shape.velocity[0];
+        shape.position[0] = 0 + shape.width * shape.scale;
     } 
-    else if (circle.position[0] + circle.radius * circle.scale >= screenWidth) {
-        circle.velocity[0] = -circle.velocity[0];
-        circle.position[0] = screenWidth - circle.radius * circle.scale;
+    else if (shape.position[0] + shape.width * shape.scale >= screenWidth) {
+        shape.velocity[0] = -shape.velocity[0];
+        shape.position[0] = screenWidth - shape.width * shape.scale;
     }
     
     // Vertical check
-    if (circle.position[1] - circle.radius * circle.scale <= 0)
+    if (shape.position[1] - shape.height * shape.scale <= 0)
     {
-        circle.velocity[1] = -circle.velocity[1];
-        circle.position[1] = 0 + circle.radius * circle.scale;
+        shape.velocity[1] = -shape.velocity[1];
+        shape.position[1] = 0 + shape.height * shape.scale;
     } 
-    else if (circle.position[1] + circle.radius * circle.scale >= screenHeight)
+    else if (shape.position[1] + shape.height * shape.scale >= screenHeight)
     {
-        circle.velocity[1] = -circle.velocity[1];
-        circle.position[1] = screenHeight - circle.radius * circle.scale;
+        shape.velocity[1] = -shape.velocity[1];
+        shape.position[1] = screenHeight - shape.height * shape.scale;
     }
+}
+
+void renderShape(const Shape& shape, int fontSize)
+{
+    if (!shape.is_drawn)
+    {
+        return;
+    }
+    DrawCircle(shape.position[0], shape.position[1], shape.width * shape.scale, convertColor(shape.color));
+    int textWidth = MeasureText(shape.name.c_str(), fontSize); 
+    DrawText(shape.name.c_str(), shape.position[0] - textWidth / 2, shape.position[1] - fontSize / 2 , fontSize, WHITE);
 }
 
 int main(int argc, char* argv[])
@@ -76,9 +89,9 @@ int main(int argc, char* argv[])
     style.FontScaleDpi = mainScale;
     
     // APP STATE
-    Circle circle;
+    Shape shape;
     int selectedShapeIndex = 0;
-    std::vector<const char*> shapeNames = { circle.name.c_str() };
+    std::vector<const char*> shapeNames = { shape.name.c_str() };
 
     while (!WindowShouldClose())
     {
@@ -86,26 +99,20 @@ int main(int argc, char* argv[])
 
         ClearBackground(BLACK);
         
-        moveCircle(circle, screenWidth, screenHeight);
-        
-        if (circle.is_drawn)
-        {
-            DrawCircle(circle.position[0], circle.position[1], circle.radius * circle.scale, convertColor(circle.color));
-            int textWidth = MeasureText(circle.name.c_str(), fontSize); 
-            DrawText(circle.name.c_str(), circle.position[0] - textWidth / 2, circle.position[1] - fontSize / 2 , fontSize, WHITE);
-        }
+        moveShape(shape, screenWidth, screenHeight);
+        renderShape(shape, fontSize);
 
         rlImGuiBegin();
 
         ImGui::Begin("Shape property");
         ImGui::Combo("Shape", &selectedShapeIndex, shapeNames.data(), static_cast<int>(shapeNames.size()));
-        ImGui::Checkbox("Draw Shape", &circle.is_drawn);
-        ImGui::SliderFloat("Scale", &circle.scale, 0.0f, 3.0f);
-        ImGui::SliderFloat2("Velocity", circle.velocity, -4.0f, 4.0f);
-        ImGui::ColorEdit3("Color", circle.color);
-        if (ImGui::InputText("Name", &circle.name))
+        ImGui::Checkbox("Draw Shape", &shape.is_drawn);
+        ImGui::SliderFloat("Scale", &shape.scale, 0.0f, 3.0f);
+        ImGui::SliderFloat2("Velocity", shape.velocity, -4.0f, 4.0f);
+        ImGui::ColorEdit3("Color", shape.color);
+        if (ImGui::InputText("Name", &shape.name))
         {
-            shapeNames[selectedShapeIndex] = circle.name.c_str();
+            shapeNames[selectedShapeIndex] = shape.name.c_str();
         }
         ImGui::End();
 
