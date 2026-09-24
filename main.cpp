@@ -11,6 +11,7 @@ struct Shape
     std::string name = "Shape";
     float scale = 1.0f;
     float velocity[2] = { 1.0f, 1.0f };
+    // position saves the upper left corner of the shape
     float position[2] = { 200.0f, 200.0f };
     float color[3] = { 1.0f, 0.0f, 0.0f };
     int width = 100;
@@ -36,10 +37,10 @@ void moveShape(Shape& shape, int screenWidth, int screenHeight) {
     
     // SCREEN BORDER CHECKS
     // Horizontal check
-    if (shape.position[0] - shape.width * shape.scale <= 0)
+    if (shape.position[0] <= 0)
     {
         shape.velocity[0] = -shape.velocity[0];
-        shape.position[0] = 0 + shape.width * shape.scale;
+        shape.position[0] = 0;
     } 
     else if (shape.position[0] + shape.width * shape.scale >= screenWidth) {
         shape.velocity[0] = -shape.velocity[0];
@@ -47,10 +48,10 @@ void moveShape(Shape& shape, int screenWidth, int screenHeight) {
     }
     
     // Vertical check
-    if (shape.position[1] - shape.height * shape.scale <= 0)
+    if (shape.position[1] <= 0)
     {
         shape.velocity[1] = -shape.velocity[1];
-        shape.position[1] = 0 + shape.height * shape.scale;
+        shape.position[1] = 0;
     } 
     else if (shape.position[1] + shape.height * shape.scale >= screenHeight)
     {
@@ -65,9 +66,10 @@ void renderShape(const Shape& shape, int fontSize)
     {
         return;
     }
-    DrawCircle(shape.position[0], shape.position[1], shape.width * shape.scale, convertColor(shape.color));
+    int radius = shape.width / 2 * shape.scale;
+    DrawCircle(shape.position[0] + radius, shape.position[1] + radius, radius, convertColor(shape.color));
     int textWidth = MeasureText(shape.name.c_str(), fontSize); 
-    DrawText(shape.name.c_str(), shape.position[0] - textWidth / 2, shape.position[1] - fontSize / 2 , fontSize, WHITE);
+    DrawText(shape.name.c_str(), shape.position[0] + radius - textWidth / 2, shape.position[1] + radius - fontSize / 2 , fontSize, WHITE);
 }
 
 int main(int argc, char* argv[])
@@ -90,7 +92,7 @@ int main(int argc, char* argv[])
     
     // APP STATE
     int selectedShapeIndex = 0;
-    std::vector<Shape> shapes = { { .name = "Circle 1" }, { .name = "Circle 2" } };
+    std::vector<Shape> shapes = { { .name = "Circle 1" }, { .name = "Circle 2", .position = { 500.0f, 500.0f } } };
     std::vector<const char*> shapeNames;
     for (Shape& shape : shapes)
     {
