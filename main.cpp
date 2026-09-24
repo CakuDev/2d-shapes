@@ -89,9 +89,13 @@ int main(int argc, char* argv[])
     style.FontScaleDpi = mainScale;
     
     // APP STATE
-    Shape shape;
     int selectedShapeIndex = 0;
-    std::vector<const char*> shapeNames = { shape.name.c_str() };
+    std::vector<Shape> shapes = { { .name = "Circle 1" }, { .name = "Circle 2" } };
+    std::vector<const char*> shapeNames;
+    for (Shape& shape : shapes)
+    {
+        shapeNames.push_back(shape.name.c_str());
+    }
 
     while (!WindowShouldClose())
     {
@@ -99,20 +103,23 @@ int main(int argc, char* argv[])
 
         ClearBackground(BLACK);
         
-        moveShape(shape, screenWidth, screenHeight);
-        renderShape(shape, fontSize);
-
+        for (Shape& shape : shapes)
+        {
+            moveShape(shape, screenWidth, screenHeight);
+            renderShape(shape, fontSize);
+        }
+        
         rlImGuiBegin();
 
         ImGui::Begin("Shape property");
         ImGui::Combo("Shape", &selectedShapeIndex, shapeNames.data(), static_cast<int>(shapeNames.size()));
-        ImGui::Checkbox("Draw Shape", &shape.is_drawn);
-        ImGui::SliderFloat("Scale", &shape.scale, 0.0f, 3.0f);
-        ImGui::SliderFloat2("Velocity", shape.velocity, -4.0f, 4.0f);
-        ImGui::ColorEdit3("Color", shape.color);
-        if (ImGui::InputText("Name", &shape.name))
+        ImGui::Checkbox("Draw Shape", &shapes[selectedShapeIndex].is_drawn);
+        ImGui::SliderFloat("Scale", &shapes[selectedShapeIndex].scale, 0.0f, 3.0f);
+        ImGui::SliderFloat2("Velocity", shapes[selectedShapeIndex].velocity, -4.0f, 4.0f);
+        ImGui::ColorEdit3("Color", shapes[selectedShapeIndex].color);
+        if (ImGui::InputText("Name", &shapes[selectedShapeIndex].name))
         {
-            shapeNames[selectedShapeIndex] = shape.name.c_str();
+            shapeNames[selectedShapeIndex] = shapes[selectedShapeIndex].name.c_str();
         }
         ImGui::End();
 
